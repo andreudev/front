@@ -4,6 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { getToken, signOut } from "../utils/auth";
 import EditRoom from "./EditRoom";
 import AddRoom from "./AddRoom";
+import { toast } from "react-toastify";
+import { confirmAlert } from "react-confirm-alert";
+import "react-confirm-alert/src/react-confirm-alert.css";
 
 function Rooms() {
   const [rooms, setRooms] = useState([]);
@@ -48,12 +51,49 @@ function Rooms() {
     setEditingRoom(null);
   };
 
+  const handleDelete = async (id) => {
+    const token = getToken();
+    try {
+      await axios.delete(`${url}/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setRooms(rooms.filter((room) => room._id !== id));
+      toast.success("Sala eliminada exitosamente");
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al eliminar la sala");
+    }
+  };
+
+  const confirmDelete = (id) => {
+    confirmAlert({
+      title: "Confirmar eliminación",
+      message: "¿Estás seguro de que deseas eliminar esta sala?",
+      buttons: [
+        {
+          label: "Sí",
+          onClick: () => handleDelete(id),
+        },
+        {
+          label: "No",
+        },
+      ],
+    });
+  };
+
   const handleCancel = () => {
     setEditingRoom(null);
   };
 
   const toggleAddRoom = () => {
     setShowAddRoom(!showAddRoom);
+  };
+
+  const handleAdd = (newRoom) => {
+    setRooms([...rooms, newRoom]);
+    setShowAddRoom(false);
   };
 
   return (
@@ -66,7 +106,7 @@ function Rooms() {
         >
           {showAddRoom ? "Cancelar" : "Agregar Sala"}
         </button>
-        {showAddRoom && <AddRoom />}
+        {showAddRoom && <AddRoom onAdd={handleAdd} />}
         {editingRoom ? (
           <EditRoom
             room={editingRoom}
@@ -80,12 +120,20 @@ function Rooms() {
                 <h3 className="text-xl font-bold">{room.nombre}</h3>
                 <p>Capacidad: {room.capacidad} personas</p>
                 <p>Ubicación: {room.ubicacion}</p>
-                <button
-                  onClick={() => handleEdit(room)}
-                  className="mt-2 bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline"
-                >
-                  Editar
-                </button>
+                <div className="flex justify-end mt-2 space-x-2">
+                  <button
+                    onClick={() => handleEdit(room)}
+                    className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => confirmDelete(room._id)}
+                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline"
+                  >
+                    Eliminar
+                  </button>
+                </div>
               </li>
             ))}
           </ul>

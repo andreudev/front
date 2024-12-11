@@ -3,7 +3,7 @@ import axios from "axios";
 import { getToken } from "../utils/auth";
 import { toast } from "react-toastify";
 
-function AddReservation({ onAdd }) {
+function ReservationForm({ onAdd }) {
   const [salas, setSalas] = useState([]);
   const [salaId, setSalaId] = useState("");
   const [fechaInicio, setFechaInicio] = useState("");
@@ -35,7 +35,7 @@ function AddReservation({ onAdd }) {
     setError("");
     const token = getToken();
     try {
-      const response = await axios.post(
+      await axios.post(
         "http://localhost:5000/api/reservations",
         { salaId, fecha_inicio: fechaInicio, fecha_fin: fechaFin },
         {
@@ -44,12 +44,11 @@ function AddReservation({ onAdd }) {
           },
         }
       );
-
       setSalaId("");
       setFechaInicio("");
       setFechaFin("");
+      onAdd();
       toast.success("Reserva agregada exitosamente");
-      onAdd(response.data);
     } catch (error) {
       console.error(error);
       setError("Error al agregar la reserva");
@@ -130,4 +129,4 @@ function AddReservation({ onAdd }) {
   );
 }
 
-export default AddReservation;
+export default ReservationForm;

@@ -1,14 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
 import { getToken } from "../utils/auth";
+import { toast } from "react-toastify";
 
 function EditRoom({ room, onUpdate, onCancel }) {
   const [nombre, setNombre] = useState(room.nombre);
   const [capacidad, setCapacidad] = useState(room.capacidad);
   const [ubicacion, setUbicacion] = useState(room.ubicacion);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
     const token = getToken();
     try {
       const response = await axios.put(
@@ -21,15 +26,20 @@ function EditRoom({ room, onUpdate, onCancel }) {
         }
       );
       onUpdate(response.data);
+      toast.success("Sala actualizada exitosamente");
     } catch (error) {
       console.error(error);
-      alert("Error al actualizar la sala");
+      setError("Error al actualizar la sala");
+      toast.error("Error al actualizar la sala");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="bg-white p-4 rounded shadow-md mb-4">
       <h3 className="text-2xl font-bold mb-4 text-center">Editar Sala</h3>
+      {error && <p className="text-red-500 mb-4">{error}</p>}
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <label
@@ -82,8 +92,9 @@ function EditRoom({ room, onUpdate, onCancel }) {
         <button
           type="submit"
           className="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          disabled={loading}
         >
-          Actualizar Sala
+          {loading ? "Actualizando..." : "Actualizar Sala"}
         </button>
         <button
           type="button"

@@ -6,6 +6,7 @@ import Profile from "./components/Profile";
 import Rooms from "./components/Rooms";
 import Reservations from "./components/Reservations";
 import AdminDashboard from "./components/AdminDashboard";
+import UserDashboard from "./components/UserDashboard";
 import Users from "./components/Users";
 
 function App() {
@@ -30,6 +31,10 @@ function App() {
         <Route
           path="/admin-dashboard"
           element={isLoggedIn ? <AdminDashboard /> : <Login />}
+        />
+        <Route
+          path="/user-dashboard"
+          element={isLoggedIn ? <UserDashboard /> : <Login />}
         />
         <Route path="/users" element={isLoggedIn ? <Users /> : <Login />} />
       </Routes>

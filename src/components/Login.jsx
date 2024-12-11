@@ -25,7 +25,11 @@ function Login({ setIsLoggedIn }) {
       });
       signIn(response.data.token);
       setIsLoggedIn(true);
-      navigate("/profile");
+      if (response.data.rol === "admin") {
+        navigate("/admin-dashboard");
+      } else {
+        navigate("/user-dashboard");
+      }
     } catch (error) {
       console.error(error);
     }

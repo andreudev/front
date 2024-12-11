@@ -1,18 +1,23 @@
 import { useState } from "react";
 import axios from "axios";
 import { getToken } from "../utils/auth";
+import { toast } from "react-toastify";
 
 function AddUser({ onAdd }) {
   const [nombre, setNombre] = useState("");
   const [correo, setCorreo] = useState("");
   const [contraseña, setContraseña] = useState("");
   const [rol, setRol] = useState("usuario");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
     const token = getToken();
     try {
-      await axios.post(
+      const response = await axios.post(
         "http://localhost:5000/api/users/register",
         { nombre, correo, contraseña, rol },
         {
@@ -25,17 +30,21 @@ function AddUser({ onAdd }) {
       setCorreo("");
       setContraseña("");
       setRol("usuario");
-      onAdd();
-      alert("Usuario agregado exitosamente");
+      toast.success("Usuario agregado exitosamente");
+      onAdd(response.data);
     } catch (error) {
       console.error(error);
-      alert("Error al agregar el usuario");
+      setError("Error al agregar el usuario");
+      toast.error("Error al agregar el usuario");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="bg-white p-4 rounded shadow-md mb-4">
       <h3 className="text-2xl font-bold mb-4 text-center">Agregar Usuario</h3>
+      {error && <p className="text-red-500 mb-4">{error}</p>}
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <label
@@ -106,8 +115,9 @@ function AddUser({ onAdd }) {
         <button
           type="submit"
           className="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          disabled={loading}
         >
-          Agregar Usuario
+          {loading ? "Agregando..." : "Agregar Usuario"}
         </button>
       </form>
     </div>

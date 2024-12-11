@@ -3,6 +3,9 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { getToken, signOut } from "../utils/auth";
 import AddUser from "./AddUser";
+import { toast } from "react-toastify";
+import { confirmAlert } from "react-confirm-alert";
+import "react-confirm-alert/src/react-confirm-alert.css";
 
 function Users() {
   const [users, setUsers] = useState([]);
@@ -65,10 +68,10 @@ function Users() {
         )
       );
       setEditingUser(null);
-      alert("Usuario actualizado exitosamente");
+      toast.success("Usuario actualizado exitosamente");
     } catch (error) {
       console.error(error);
-      alert("Error al actualizar el usuario");
+      toast.error("Error al actualizar el usuario");
     }
   };
 
@@ -81,11 +84,27 @@ function Users() {
         },
       });
       setUsers(users.filter((user) => user._id !== id));
-      alert("Usuario eliminado exitosamente");
+      toast.success("Usuario eliminado exitosamente");
     } catch (error) {
       console.error(error);
-      alert("Error al eliminar el usuario");
+      toast.error("Error al eliminar el usuario");
     }
+  };
+
+  const confirmDelete = (id) => {
+    confirmAlert({
+      title: "Confirmar eliminación",
+      message: "¿Estás seguro de que deseas eliminar este usuario?",
+      buttons: [
+        {
+          label: "Sí",
+          onClick: () => handleDelete(id),
+        },
+        {
+          label: "No",
+        },
+      ],
+    });
   };
 
   const handleCancel = () => {
@@ -99,9 +118,9 @@ function Users() {
     setShowAddUser(!showAddUser);
   };
 
-  const handleAdd = () => {
+  const handleAdd = (newUser) => {
+    setUsers([...users, newUser]);
     setShowAddUser(false);
-    fetchUsers();
   };
 
   return (
@@ -201,7 +220,7 @@ function Users() {
                     Editar
                   </button>
                   <button
-                    onClick={() => handleDelete(user._id)}
+                    onClick={() => confirmDelete(user._id)}
                     className="ml-2 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline"
                   >
                     Eliminar

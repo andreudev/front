@@ -1,17 +1,22 @@
 import { useState } from "react";
 import axios from "axios";
 import { getToken } from "../utils/auth";
+import { toast } from "react-toastify";
 
-function AddRoom() {
+function AddRoom({ onAdd }) {
   const [nombre, setNombre] = useState("");
   const [capacidad, setCapacidad] = useState("");
   const [ubicacion, setUbicacion] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
     const token = getToken();
     try {
-      await axios.post(
+      const response = await axios.post(
         "http://localhost:5000/api/rooms",
         { nombre, capacidad, ubicacion },
         {
@@ -23,16 +28,21 @@ function AddRoom() {
       setNombre("");
       setCapacidad("");
       setUbicacion("");
-      alert("Sala agregada exitosamente");
+      toast.success("Sala agregada exitosamente");
+      onAdd(response.data);
     } catch (error) {
       console.error(error);
-      alert("Error al agregar la sala");
+      setError("Error al agregar la sala");
+      toast.error("Error al agregar la sala");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="bg-white p-4 rounded shadow-md mb-4">
       <h3 className="text-2xl font-bold mb-4 text-center">Agregar Sala</h3>
+      {error && <p className="text-red-500 mb-4">{error}</p>}
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <label
@@ -85,8 +95,9 @@ function AddRoom() {
         <button
           type="submit"
           className="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          disabled={loading}
         >
-          Agregar Sala
+          {loading ? "Agregando..." : "Agregar Sala"}
         </button>
       </form>
     </div>

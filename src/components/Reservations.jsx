@@ -2,54 +2,60 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { getToken, signOut } from "../utils/auth";
+import EditReservation from "./EditReservation";
 import AddReservation from "./AddReservation";
+import { toast } from "react-toastify";
+import { confirmAlert } from "react-confirm-alert";
+import "react-confirm-alert/src/react-confirm-alert.css";
 
 function Reservations() {
   const [reservations, setReservations] = useState([]);
   const [editingReservation, setEditingReservation] = useState(null);
-  const [fechaInicio, setFechaInicio] = useState("");
-  const [fechaFin, setFechaFin] = useState("");
   const [showAddReservation, setShowAddReservation] = useState(false);
   const navigate = useNavigate();
   const url = "http://localhost:5000/api/reservations";
 
   useEffect(() => {
-    fetchReservations();
-  }, [navigate]);
-
-  const fetchReservations = async () => {
     const token = getToken();
     if (!token) {
       navigate("/");
       return;
     }
 
-    try {
-      const response = await axios.get(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setReservations(response.data);
-    } catch (error) {
-      console.error(error);
-      signOut();
-      navigate("/");
-    }
-  };
+    const fetchReservations = async () => {
+      try {
+        const response = await axios.get(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setReservations(response.data);
+      } catch (error) {
+        console.error(error);
+        signOut();
+        navigate("/");
+      }
+    };
+
+    fetchReservations();
+  }, [navigate]);
 
   const handleEdit = (reservation) => {
     setEditingReservation(reservation);
-    setFechaInicio(
-      new Date(reservation.fecha_inicio).toISOString().slice(0, 16)
+  };
+
+  const handleUpdate = (updatedReservation) => {
+    setReservations(
+      reservations.map((reservation) =>
+        reservation._id === updatedReservation._id
+          ? updatedReservation
+          : reservation
+      )
     );
-    setFechaFin(new Date(reservation.fecha_fin).toISOString().slice(0, 16));
+    setEditingReservation(null);
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Estás seguro de que deseas eliminar esta reserva?")) {
-      return;
-    }
     const token = getToken();
     try {
       await axios.delete(`${url}/${id}`, {
@@ -60,39 +66,27 @@ function Reservations() {
       setReservations(
         reservations.filter((reservation) => reservation._id !== id)
       );
-      alert("Reserva eliminada exitosamente");
+      toast.success("Reserva eliminada exitosamente");
     } catch (error) {
       console.error(error);
-      alert("Error al eliminar la reserva");
+      toast.error("Error al eliminar la reserva");
     }
   };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    const token = getToken();
-    try {
-      await axios.put(
-        `${url}/${editingReservation._id}`,
-        { fecha_inicio: fechaInicio, fecha_fin: fechaFin },
+  const confirmDelete = (id) => {
+    confirmAlert({
+      title: "Confirmar eliminación",
+      message: "¿Estás seguro de que deseas eliminar esta reserva?",
+      buttons: [
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setReservations(
-        reservations.map((reservation) =>
-          reservation._id === editingReservation._id
-            ? { ...reservation, fecha_inicio: fechaInicio, fecha_fin: fechaFin }
-            : reservation
-        )
-      );
-      setEditingReservation(null);
-      alert("Reserva actualizada exitosamente");
-    } catch (error) {
-      console.error(error);
-      alert("Error al actualizar la reserva");
-    }
+          label: "Sí",
+          onClick: () => handleDelete(id),
+        },
+        {
+          label: "No",
+        },
+      ],
+    });
   };
 
   const handleCancel = () => {
@@ -103,9 +97,9 @@ function Reservations() {
     setShowAddReservation(!showAddReservation);
   };
 
-  const handleAdd = () => {
+  const handleAdd = (newReservation) => {
+    setReservations([...reservations, newReservation]);
     setShowAddReservation(false);
-    fetchReservations();
   };
 
   return (
@@ -120,58 +114,11 @@ function Reservations() {
         </button>
         {showAddReservation && <AddReservation onAdd={handleAdd} />}
         {editingReservation ? (
-          <div className="bg-white p-4 rounded shadow-md mb-4">
-            <h3 className="text-2xl font-bold mb-4 text-center">
-              Editar Reserva
-            </h3>
-            <form onSubmit={handleUpdate}>
-              <div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="fechaInicio"
-                >
-                  Fecha de Inicio
-                </label>
-                <input
-                  type="datetime-local"
-                  id="fechaInicio"
-                  value={fechaInicio}
-                  onChange={(e) => setFechaInicio(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="fechaFin"
-                >
-                  Fecha de Fin
-                </label>
-                <input
-                  type="datetime-local"
-                  id="fechaFin"
-                  value={fechaFin}
-                  onChange={(e) => setFechaFin(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-              >
-                Actualizar Reserva
-              </button>
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-2"
-              >
-                Cancelar
-              </button>
-            </form>
-          </div>
+          <EditReservation
+            reservation={editingReservation}
+            onUpdate={handleUpdate}
+            onCancel={handleCancel}
+          />
         ) : (
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {reservations.map((reservation) => (
@@ -186,15 +133,15 @@ function Reservations() {
                   Inicio: {new Date(reservation.fecha_inicio).toLocaleString()}
                 </p>
                 <p>Fin: {new Date(reservation.fecha_fin).toLocaleString()}</p>
-                <div className="flex justify-end mt-2">
+                <div className="flex justify-end mt-2 space-x-2">
                   <button
                     onClick={() => handleEdit(reservation)}
-                    className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline mr-2"
+                    className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline"
                   >
                     Editar
                   </button>
                   <button
-                    onClick={() => handleDelete(reservation._id)}
+                    onClick={() => confirmDelete(reservation._id)}
                     className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline"
                   >
                     Eliminar

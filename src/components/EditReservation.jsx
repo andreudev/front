@@ -1,33 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
 import { getToken } from "../utils/auth";
 import { toast } from "react-toastify";
 
-function AddReservation({ onAdd }) {
-  const [salas, setSalas] = useState([]);
-  const [salaId, setSalaId] = useState("");
-  const [fechaInicio, setFechaInicio] = useState("");
-  const [fechaFin, setFechaFin] = useState("");
+function EditReservation({ reservation, onUpdate, onCancel }) {
+  const [fechaInicio, setFechaInicio] = useState(
+    new Date(reservation.fecha_inicio).toISOString().slice(0, 16)
+  );
+  const [fechaFin, setFechaFin] = useState(
+    new Date(reservation.fecha_fin).toISOString().slice(0, 16)
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    const fetchSalas = async () => {
-      const token = getToken();
-      try {
-        const response = await axios.get("http://localhost:5000/api/rooms", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setSalas(response.data);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    fetchSalas();
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,25 +19,21 @@ function AddReservation({ onAdd }) {
     setError("");
     const token = getToken();
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/reservations",
-        { salaId, fecha_inicio: fechaInicio, fecha_fin: fechaFin },
+      const response = await axios.put(
+        `http://localhost:5000/api/reservations/${reservation._id}`,
+        { fecha_inicio: fechaInicio, fecha_fin: fechaFin },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-
-      setSalaId("");
-      setFechaInicio("");
-      setFechaFin("");
-      toast.success("Reserva agregada exitosamente");
-      onAdd(response.data);
+      onUpdate(response.data);
+      toast.success("Reserva actualizada exitosamente");
     } catch (error) {
       console.error(error);
-      setError("Error al agregar la reserva");
-      toast.error("Error al agregar la reserva");
+      setError("Error al actualizar la reserva");
+      toast.error("Error al actualizar la reserva");
     } finally {
       setLoading(false);
     }
@@ -61,31 +41,9 @@ function AddReservation({ onAdd }) {
 
   return (
     <div className="bg-white p-4 rounded shadow-md mb-4">
-      <h3 className="text-2xl font-bold mb-4 text-center">Agregar Reserva</h3>
+      <h3 className="text-2xl font-bold mb-4 text-center">Editar Reserva</h3>
       {error && <p className="text-red-500 mb-4">{error}</p>}
       <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label
-            className="block text-gray-700 text-sm font-bold mb-2"
-            htmlFor="salaId"
-          >
-            Sala
-          </label>
-          <select
-            id="salaId"
-            value={salaId}
-            onChange={(e) => setSalaId(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            required
-          >
-            <option value="">Seleccione una sala</option>
-            {salas.map((sala) => (
-              <option key={sala._id} value={sala._id}>
-                {sala.nombre} - {sala.ubicacion}
-              </option>
-            ))}
-          </select>
-        </div>
         <div className="mb-4">
           <label
             className="block text-gray-700 text-sm font-bold mb-2"
@@ -123,11 +81,18 @@ function AddReservation({ onAdd }) {
           className="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           disabled={loading}
         >
-          {loading ? "Agregando..." : "Agregar Reserva"}
+          {loading ? "Actualizando..." : "Actualizar Reserva"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-2"
+        >
+          Cancelar
         </button>
       </form>
     </div>
   );
 }
 
-export default AddReservation;
+export default EditReservation;
