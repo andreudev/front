@@ -8,6 +8,7 @@ function Profile() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const url = "http://localhost:5000/api/users/profile";
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -23,6 +24,9 @@ function Profile() {
           },
         });
         setUser(response.data);
+        if (response.data.rol === "admin") {
+          navigate("/admin-dashboard");
+        }
       } catch (error) {
         console.error(error);
         signOut();
