@@ -19,7 +19,7 @@ function AdminDashboard() {
       case "rooms":
         return <Rooms />;
       case "reservations":
-        return <Reservations />;
+        return <Reservations isAdmin={true} />;
       case "users":
         return <Users />;
       default:

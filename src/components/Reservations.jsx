@@ -8,15 +8,14 @@ import { toast } from "react-toastify";
 import { confirmAlert } from "react-confirm-alert";
 import "react-confirm-alert/src/react-confirm-alert.css";
 
-function Reservations() {
+function Reservations({ isAdmin }) {
   const [reservations, setReservations] = useState([]);
   const [editingReservation, setEditingReservation] = useState(null);
   const [showAddReservation, setShowAddReservation] = useState(false);
   const navigate = useNavigate();
-  const url = "http://localhost:5000/api/reservations";
+  const token = getToken();
 
   useEffect(() => {
-    const token = getToken();
     if (!token) {
       navigate("/");
       return;
@@ -24,6 +23,9 @@ function Reservations() {
 
     const fetchReservations = async () => {
       try {
+        const url = isAdmin
+          ? "http://localhost:5000/api/reservations/all"
+          : "http://localhost:5000/api/reservations";
         const response = await axios.get(url, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -38,7 +40,7 @@ function Reservations() {
     };
 
     fetchReservations();
-  }, [navigate]);
+  }, [navigate, token, isAdmin]);
 
   const handleEdit = (reservation) => {
     setEditingReservation(reservation);
@@ -56,9 +58,8 @@ function Reservations() {
   };
 
   const handleDelete = async (id) => {
-    const token = getToken();
     try {
-      await axios.delete(`${url}/${id}`, {
+      await axios.delete(`http://localhost:5000/api/reservations/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -133,6 +134,7 @@ function Reservations() {
                   Inicio: {new Date(reservation.fecha_inicio).toLocaleString()}
                 </p>
                 <p>Fin: {new Date(reservation.fecha_fin).toLocaleString()}</p>
+                <p>Usuario: {reservation.usuarioId.nombre}</p>
                 <div className="flex justify-end mt-2 space-x-2">
                   <button
                     onClick={() => handleEdit(reservation)}

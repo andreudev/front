@@ -52,8 +52,13 @@ function AddReservation({ onAdd }) {
       onAdd(response.data);
     } catch (error) {
       console.error(error);
-      setError("Error al agregar la reserva");
-      toast.error("Error al agregar la reserva");
+      if (error.response && error.response.data.mensaje) {
+        setError(error.response.data.mensaje);
+        toast.error(error.response.data.mensaje);
+      } else {
+        setError("Error al agregar la reserva");
+        toast.error("Error al agregar la reserva");
+      }
     } finally {
       setLoading(false);
     }
@@ -62,7 +67,6 @@ function AddReservation({ onAdd }) {
   return (
     <div className="bg-white p-4 rounded shadow-md mb-4">
       <h3 className="text-2xl font-bold mb-4 text-center">Agregar Reserva</h3>
-      {error && <p className="text-red-500 mb-4">{error}</p>}
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <label

@@ -4,10 +4,12 @@ import { useNavigate, Link } from "react-router-dom";
 import { signIn } from "../utils/auth";
 import { AiOutlineUser } from "react-icons/ai";
 import { RiLockPasswordLine } from "react-icons/ri";
+import { toast } from "react-toastify";
 
 function Login({ setIsLoggedIn }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
   const url = "http://localhost:5000/api/users/login";
   const token = localStorage.getItem("token");
@@ -18,6 +20,7 @@ function Login({ setIsLoggedIn }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
     try {
       const response = await axios.post(url, {
         correo: email,
@@ -32,6 +35,13 @@ function Login({ setIsLoggedIn }) {
       }
     } catch (error) {
       console.error(error);
+      if (error.response && error.response.data.mensaje) {
+        setError(error.response.data.mensaje);
+        toast.error(error.response.data.mensaje);
+      } else {
+        setError("Error al iniciar sesión");
+        toast.error("Error al iniciar sesión");
+      }
     }
   };
 
